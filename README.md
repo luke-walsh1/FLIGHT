@@ -2,6 +2,7 @@
 # FLIGHT
 
 A custom, high-performance rocket flight computer designed around a Raspberry Pi Pico (RP2040) to track, log, and deploy parachutes using a servo.
+This project is WIP and i do not guarantee that everything is working yet.
 
 <img width="1724" height="978" alt="FRONT V1 5" src="https://github.com/user-attachments/assets/0b3ee80c-a42b-4f35-8d4f-f71571c01024" />
 
