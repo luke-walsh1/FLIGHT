@@ -1,7 +1,10 @@
+<p align="center">
+<img width="220" height="220" alt="FLIGHT AVIONICS" src="https://github.com/user-attachments/assets/ad5a8aaf-a48c-42e4-bcc5-ee30d990d3c7" />
+</p>
 
-# FLIGHT
+## FLIGHT
 
-A custom, high-performance rocket flight computer designed around a Raspberry Pi Pico (RP2040) to track, log, and deploy parachutes using a servo.
+FLIGHT is a custom, high-performance rocket flight computer designed around a Raspberry Pi Pico (RP2040) to track, log, and deploy parachutes using a servo.
 
 ### this project is WIP and i do not guarantee that everything is working yet.
 
