@@ -1,5 +1,5 @@
 <p align="center">
-<img width="220" height="220" alt="FLIGHT AVIONICS" src="https://github.com/user-attachments/assets/ad5a8aaf-a48c-42e4-bcc5-ee30d990d3c7" />
+<img width="1024" height="288" alt="image" src="https://github.com/user-attachments/assets/47de00de-d221-4449-ad99-10b25c82d9e1" />
 </p>
 
 ## FLIGHT
