@@ -6,7 +6,8 @@
 
 FLIGHT is a custom, high-performance rocket flight computer designed around a Raspberry Pi Pico (RP2040) to track, log, and deploy parachutes using a servo.
 
-### this project is WIP and i do not guarantee that everything is working yet.
+## Disclaimer
+### The code provided is tested working with the hardware, however servo and arm button control is up to yourself to do however you wish :)
 
 <img width="1918" height="978" alt="rasppico altimiter 1 7" src="https://github.com/user-attachments/assets/56ea261e-ac57-4084-998a-59d0bfa2c2f6" />
 
@@ -46,26 +47,16 @@ FLIGHT is a custom, high-performance rocket flight computer designed around a Ra
 
 The goal is to log data. FLIGHT saves data in a format that looks like this:
 
-```
-Timestamp(ms),Pressure(Pa),Temperature(C),Est_Altitude(m),Accel_X(g),Accel_Y(g),Accel_Z(g)
-0,101325.00,21.50,0.00,0.02,-0.01,1.01
-100,101324.80,21.50,0.02,0.01,0.00,1.00
-200,101325.10,21.48,-0.01,-0.01,-0.02,1.02
-300,101310.20,21.45,1.23,0.15,0.08,2.45
-400,101215.50,21.40,9.10,-0.32,0.45,5.12
-500,101010.00,21.35,26.21,0.85,-0.92,7.89
-600,100650.30,21.28,55.80,-1.10,1.20,6.54
-700,100110.00,21.20,100.95,0.45,-0.32,0.12
-800,99520.40,21.12,150.32,0.12,0.11,-0.15
-900,99100.10,21.05,185.71,-0.05,0.02,-0.22
-1000,98950.00,20.98,198.40,0.01,-0.02,-0.05
-1100,98962.20,20.99,197.38,-0.12,0.15,-1.95
-1200,99120.50,21.02,184.02,0.22,-0.18,-0.85
 
-```
+<img width="484" height="393" alt="image" src="https://github.com/user-attachments/assets/19f1c8ff-7cb5-4e7a-a3df-67507a9c7efb" />
+
+---
+
 These numbers by themselves arent that helpfull however with the help of a python program we can graph this data and mark the max altitude and other data points.
 
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/a8c05150-00b3-4c91-8d45-b3b0f63e7ba1" />
+---
+
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/96aa4529-f86c-4a71-b71f-c26158b87d6a" />
 
 
 More on my YouTube and Stardance Profile:
