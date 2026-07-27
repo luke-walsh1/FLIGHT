@@ -1,0 +1,198 @@
+#include <Wire.h>
+#include <SPI.h>
+#include <SD.h>
+
+#define SDA_PIN 4
+#define SCL_PIN 5
+#define MPU9250_ADDR 0x68
+#define BMP280_ADDR  0x76
+
+// SPI Pins for MicroSD Card Slot
+#define SD_CS   17
+#define SD_SCK  18
+#define SD_MOSI 19
+#define SD_MISO 16
+
+// BMP280 Calibration Registers
+uint16_t dig_T1, dig_P1;
+int16_t  dig_T2, dig_T3, dig_P2, dig_P3, dig_P4, dig_P5, dig_P6, dig_P7, dig_P8, dig_P9;
+int32_t t_fine;
+
+float baselinePressure = 0;
+bool sdReady = false;
+unsigned long startTime = 0;
+File logFile;
+
+// Read 16-bit unsigned from BMP280
+uint16_t read16_LE(uint8_t reg) {
+  Wire.beginTransmission(BMP280_ADDR);
+  Wire.write(reg);
+  Wire.endTransmission(false);
+  Wire.requestFrom((uint8_t)BMP280_ADDR, (size_t)2, true);
+  return (Wire.read() | (Wire.read() << 8));
+}
+
+int16_t readS16_LE(uint8_t reg) { return (int16_t)read16_LE(reg); }
+
+void readBMP280Calib() {
+  dig_T1 = read16_LE(0x88); dig_T2 = readS16_LE(0x8A); dig_T3 = readS16_LE(0x8C);
+  dig_P1 = read16_LE(0x8E); dig_P2 = readS16_LE(0x90); dig_P3 = readS16_LE(0x92);
+  dig_P4 = readS16_LE(0x94); dig_P5 = readS16_LE(0x96); dig_P6 = readS16_LE(0x98);
+  dig_P7 = readS16_LE(0x9A); dig_P8 = readS16_LE(0x9C); dig_P9 = readS16_LE(0x9E);
+}
+
+float getTemperature() {
+  Wire.beginTransmission(BMP280_ADDR);
+  Wire.write(0xFA);
+  Wire.endTransmission(false);
+  Wire.requestFrom((uint8_t)BMP280_ADDR, (size_t)3, true);
+  
+  int32_t adc_T = ((int32_t)Wire.read() << 12) | ((int32_t)Wire.read() << 4) | ((int32_t)Wire.read() >> 4);
+  int32_t var1 = ((((adc_T >> 3) - ((int32_t)dig_T1 << 1))) * ((int32_t)dig_T2)) >> 11;
+  int32_t var2 = (((((adc_T >> 4) - ((int32_t)dig_T1)) * ((adc_T >> 4) - ((int32_t)dig_T1))) >> 12) * ((int32_t)dig_T3)) >> 14;
+  t_fine = var1 + var2;
+  
+  return ((t_fine * 5 + 128) >> 8) / 100.0f;
+}
+
+float getPressure() {
+  getTemperature(); // Updates t_fine
+  Wire.beginTransmission(BMP280_ADDR);
+  Wire.write(0xF7);
+  Wire.endTransmission(false);
+  Wire.requestFrom((uint8_t)BMP280_ADDR, (size_t)3, true);
+  
+  int32_t adc_P = ((int32_t)Wire.read() << 12) | ((int32_t)Wire.read() << 4) | ((int32_t)Wire.read() >> 4);
+  int64_t var1 = ((int64_t)t_fine) - 128000;
+  int64_t var2 = var1 * var1 * (int64_t)dig_P6;
+  var2 = var2 + ((var1 * (int64_t)dig_P5) << 17);
+  var2 = var2 + (((int64_t)dig_P4) << 35);
+  var1 = ((var1 * var1 * (int64_t)dig_P3) >> 8) + ((var1 * (int64_t)dig_P2) << 12);
+  var1 = (((((int64_t)1) << 47) + var1)) * ((int64_t)dig_P1) >> 33;
+
+  if (var1 == 0) return 0;
+
+  int64_t p = 1048576 - adc_P;
+  p = (((p << 31) - var2) * 3125) / var1;
+  var1 = (((int64_t)dig_P9) * (p >> 13) * (p >> 13)) >> 25;
+  var2 = (((int64_t)dig_P8) * p) >> 19;
+  p = ((p + var1 + var2) >> 8) + (((int64_t)dig_P7) << 4);
+  return (float)p / 25600.0;
+}
+
+void setup() {
+  Serial.begin(115200);
+
+  // Non-blocking timeout for Serial monitor boot
+  unsigned long serialTimeout = millis();
+  while (!Serial && (millis() - serialTimeout < 2000)) {
+    delay(10);
+  }
+
+  // Initialize I2C
+  Wire.setSDA(SDA_PIN);
+  Wire.setSCL(SCL_PIN);
+  Wire.begin();
+  Wire.setClock(400000); // Bumped to 400kHz Fast I2C
+
+  Serial.println("--- INITIALIZING FLIGHT CORE PAYLOAD ---");
+
+  // 1. Wake MPU9250
+  Wire.beginTransmission(MPU9250_ADDR);
+  Wire.write(0x6B); Wire.write(0x00);
+  Wire.endTransmission();
+
+  // Set MPU9250 Accel to +-16G range
+  Wire.beginTransmission(MPU9250_ADDR);
+  Wire.write(0x1C); Wire.write(0x18);
+  Wire.endTransmission();
+
+  // 2. Configure BMP280
+  Wire.beginTransmission(BMP280_ADDR);
+  Wire.write(0xF4); Wire.write(0x57);
+  Wire.endTransmission();
+
+  readBMP280Calib();
+  delay(100);
+
+  // Lock launchpad baseline pressure reliably
+  while (baselinePressure < 500.0) {
+    baselinePressure = getPressure();
+    delay(50);
+  }
+  Serial.print("Launch Pad Baseline: "); Serial.print(baselinePressure); Serial.println(" hPa");
+
+  // 3. Initialize SPI & SD Card Slot
+  SPI.setRX(SD_MISO);
+  SPI.setCS(SD_CS);
+  SPI.setSCK(SD_SCK);
+  SPI.setTX(SD_MOSI);
+  SPI.begin();
+
+  if (!SD.begin(SD_CS)) {
+    Serial.println("Storage Warning: MicroSD Card initialization failed!");
+    sdReady = false;
+  } else {
+    Serial.println("Storage: MicroSD Mounted Successfully!");
+    sdReady = true;
+
+    // Open file in persistent write mode
+    logFile = SD.open("flight.csv", FILE_WRITE);
+    if (logFile) {
+      logFile.println("Time_ms,Pressure_hPa,Temp_C,Altitude_m,Accel_X,Accel_Y,Accel_Z");
+      logFile.flush();
+      Serial.println("File: flight.csv initialized with header.");
+    } else {
+      Serial.println("Storage Error: Failed to open flight.csv!");
+      sdReady = false;
+    }
+  }
+
+  startTime = millis();
+  Serial.println("--- RUNTIME ACTIVE: LOGGING TELEMETRY ---");
+}
+
+void loop() {
+  unsigned long now = millis() - startTime;
+
+  float temp = getTemperature();
+  float pressure = getPressure();
+  float altitude = 44330.0 * (1.0 - pow(pressure / baselinePressure, 0.1903));
+
+  // Read MPU9250 Accel
+  Wire.beginTransmission(MPU9250_ADDR);
+  Wire.write(0x3B);
+  Wire.endTransmission(false);
+  Wire.requestFrom((uint8_t)MPU9250_ADDR, (size_t)6, true);
+
+  int16_t rawX = (Wire.read() << 8) | Wire.read();
+  int16_t rawY = (Wire.read() << 8) | Wire.read();
+  int16_t rawZ = (Wire.read() << 8) | Wire.read();
+
+  // Full-scale range +-16G = 2048 LSB/g
+  float ax = (float)rawX / 2048.0;
+  float ay = (float)rawY / 2048.0;
+  float az = (float)rawZ / 2048.0;
+
+  // Stream to Serial
+  Serial.print("T+"); Serial.print(now);
+  Serial.print("ms | Alt: "); Serial.print(altitude, 2);
+  Serial.print("m | Accel Z: "); Serial.print(az, 2);
+  Serial.print("G | SD: "); Serial.println(sdReady ? "OK" : "FAIL");
+
+  // Log to SD Card
+  if (sdReady && logFile) {
+    logFile.print(now); logFile.print(",");
+    logFile.print(pressure, 2); logFile.print(",");
+    logFile.print(temp, 1); logFile.print(",");
+    logFile.print(altitude, 2); logFile.print(",");
+    logFile.print(ax, 2); logFile.print(",");
+    logFile.print(ay, 2); logFile.print(",");
+    logFile.println(az, 2);
+    
+    // Commit buffered bytes to flash memory without re-opening
+    logFile.flush();
+  }
+
+  delay(100); // 10Hz sampling frequency
+}
