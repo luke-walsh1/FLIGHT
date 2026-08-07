@@ -11,6 +11,9 @@ FLIGHT is a custom, high-performance rocket flight computer designed around a Ra
 
 <img width="1918" height="978" alt="rasppico altimiter 1 7" src="https://github.com/user-attachments/assets/56ea261e-ac57-4084-998a-59d0bfa2c2f6" />
 
+<img width="4000" height="3000" alt="20260807_190316 1" src="https://github.com/user-attachments/assets/eb9ac075-e5b2-4a20-8350-ed8eae75aca7" />
+
+
 ---
 
 
@@ -27,6 +30,9 @@ FLIGHT is a custom, high-performance rocket flight computer designed around a Ra
 * Voltage Regulation (MT3608): A  DC-DC boost converter circuit to cleanly step up battery power to a stable $5\text{V}$ line for the onboard servo control.
 
   <img width="1918" height="978" alt="rasppico altimiter 1 7  back" src="https://github.com/user-attachments/assets/efae182b-e41b-45f9-a3a7-c6dcfaae92b5" />
+
+<img width="4000" height="3000" alt="20260807_190732 1" src="https://github.com/user-attachments/assets/f362efde-2315-4cad-bd7f-0b7cd2dd6455" />
+
 
 ---
 
