@@ -7,7 +7,9 @@
 FLIGHT is a custom, high-performance rocket flight computer designed around a Raspberry Pi Pico (RP2040) to track, log, and deploy parachutes using a servo.
 
 ## Disclaimer
-### The code provided is tested working with the hardware, however servo and arm button control is up to yourself to do however you wish :)
+### The provided code is tested and working with the hardware; however, the servo and arm button controls can be customized to suit your specific needs and are not implimented in the code:)
+
+---
 
 <img width="1918" height="978" alt="rasppico altimiter 1 7" src="https://github.com/user-attachments/assets/56ea261e-ac57-4084-998a-59d0bfa2c2f6" />
 
