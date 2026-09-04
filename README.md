@@ -66,6 +66,11 @@ These numbers by themselves arent that helpfull however with the help of a pytho
 
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/96aa4529-f86c-4a71-b71f-c26158b87d6a" />
 
+---
+
+Included in the files is also a 3d printable bracket to mount flight to your rocket,
+step and stl files to customise to your needs.
+
 
 More on my YouTube and Stardance Profile:
 
