@@ -70,7 +70,7 @@ These numbers by themselves arent that helpfull however with the help of a pytho
 
 Included in the files is also a 3d printable bracket to mount flight to your rocket,
 step and stl files to customise to your needs.
-
+work in progress : doesnt fit yet (oops)
 
 More on my YouTube and Stardance Profile:
 
